@@ -1,0 +1,57 @@
+<!-- DOCTYPE -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Burnout</title>
+    <meta charset="utf-8">
+    <!-- Viewport Meta Tag -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" 
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" 
+        crossorigin="anonymous">
+    <!--Other CSS-->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+        crossorigin=""/>
+    <!--Own CSS-->
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Always set the map height explicitly to define the size of the div
+        * element that contains the map. */
+        #map {
+            height: 100%;
+        }
+        /* Optional: Makes the sample page fill the window. */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+<div id="map"></div>
+<script>
+    var map;
+    function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat: 55.673962, lng: 12.591591},
+            zoom: 12
+        });
+    }
+</script>
+<!--<script src="basic_map.js"></script>-->
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYZYOjR7b3q5p0isOdjQ8SCpfN8zpJB-M&callback=initMap"
+        async defer></script>
+
+<!-- Javascript -->
+
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYZYOjR7b3q5p0isOdjQ8SCpfN8zpJB-M&callback=initMap"
+        async defer></script>
+
+</body>
+</html>
