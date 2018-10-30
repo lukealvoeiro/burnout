@@ -1,0 +1,5 @@
+Use leaflet geoJSON instead of CSV files
+
+In python script save file as JSON, not CSV;
+
+$.Ajax in order to do this
