@@ -4,6 +4,7 @@ from ftplib import FTP
 import csv
 import random
 import json
+import datetime
 
 
 class Active_Fire_Fetch():
@@ -17,10 +18,12 @@ class Active_Fire_Fetch():
     modis_24hr = 'MODIS_C6_USA_contiguous_and_Hawaii_24hr.csv'
     # modis_file = 'MODIS_C6_USA_contiguous_and_Hawaii_MCD14DL_NRT_2018238.txt'
     modis_file = 'MODIS_C6_USA_contiguous_and_Hawaii_MCD14DL_NRT_2018'
-    modis_file_end = 242
+    modis_file_end = 256
     local_download = 'new_data.csv'
     fire_locations = 'fire_locations.json'
     non_fire_locations = 'non_fire_locations.json'
+    archive_data = ['../fire_archive_data/fire_archive_M6_31049.csv', '../fire_archive_data/fire_nrt_M6_31049.csv']
+    # archive_data = ['../fire_archive_data/fire_archive_M6_32169.json', '../fire_archive_data/fire_archive_V1_32170.json', '../fire_archive_data/fire_nrt_M6_32169.json', '../fire_archive_data/fire_nrt_V1_32170.json']
     ca_north_lat = 42
     ca_south_lat = 32.7
     ca_east_long = -116.3
@@ -50,6 +53,18 @@ class Active_Fire_Fetch():
         ftp.quit()
         localfile.close()
 
+    
+    def active_fire_check(self, confidence, latitude, longitude):
+        '''
+        Returns if the active fire is roughly within the state of California.
+        '''
+        if confidence == '100':
+            latitude_bound = (float(latitude) <= self.ca_north_lat) & (float(latitude) >= self.ca_south_lat)
+            longitude_bound = (float(longitude) <= self.ca_east_long) & (float(longitude) >= self.ca_west_long)
+            return latitude_bound & longitude_bound
+        else:
+            return False
+
 
     def extract_active_fires(self):
         '''
@@ -66,12 +81,13 @@ class Active_Fire_Fetch():
             date = ''
 
             for row in table:
-                if row['confidence'] == '100':
+                # if row['confidence'] == '100':
+                if self.active_fire_check(row['confidence'], row['latitude'], row['longitude']):
                     active_fires["Date"].append(row['acq_date'])
                     active_fires["Time"].append(row['acq_time'])
                     active_fires["Latitude"].append(row['latitude'])
                     active_fires["Longitude"].append(row['longitude'])
-                    date = row['acq_date']
+                date = row['acq_date']
                     # active_fires.append({'acq_date': row['acq_date'], 'acq_time': row['acq_time'], 'latitude': row['latitude'], 'longitude': row['longitude']})
                     # print(row['latitude'], row['longitude'])
                 non_fire_coords = self.find_non_fires(row, non_fire_coords)
@@ -81,6 +97,46 @@ class Active_Fire_Fetch():
         csvfile.close()
         return {'active_fires': active_fires, 'non_fire_coords': non_fire_coords, 'date': date}
         # return (active_fires, non_fire_coords, date)
+    
+
+    def extract_archive_fires(self, csv_file):
+        '''
+        Extract archived fire data from CSV files.
+        
+        To Do: Make active_fires an empty list; add dict object as each elt in list;
+        Once a comprehensive list is complete, sort it by date (convert to datetime);
+        Return a sorted JSON object based on sorted dict.
+        '''
+
+        active_fires = []
+        datetime_format = '%Y-%m-%d'
+        with open(csv_file, 'r') as csvfile:
+            table = csv.DictReader(csvfile)
+
+            for row in table:
+                if self.active_fire_check(row['confidence'], row['latitude'], row['longitude']):
+                    date_time_obj = datetime.datetime.strptime(row['acq_date'], datetime_format)
+                    date_time_since_epoch = int(date_time_obj.strftime("%s")) * 1000
+                    active_fires.append({"Date": row['acq_date'], "Datetime": date_time_since_epoch, "Time": row['acq_time'], "Latitude": row['latitude'], "Longitude": row['longitude']})
+                    print("Extracted Fire on " + row['acq_date'])
+        csvfile.close()
+        return active_fires
+
+        # active_fires = {"Date": [], "Time": [], "Latitude": [], "Longitude": []}
+        # with open(csv_file, 'r') as csvfile:
+        #     table = csv.DictReader(csvfile)
+        #     date = ''
+
+        #     for row in table:
+        #         if self.active_fire_check(row['confidence'], row['latitude'], row['longitude']):
+        #             active_fires["Date"].append(row['acq_date'])
+        #             active_fires["Time"].append(row['acq_time'])
+        #             active_fires["Latitude"].append(row['latitude'])
+        #             active_fires["Longitude"].append(row['longitude'])
+        #             print("Extracted Fire on " + row['acq_date'])
+        #         date = row['acq_date']
+        # csvfile.close()
+        # return active_fires
 
 
     def add_active_fires(self, active_fire_list):
@@ -112,6 +168,22 @@ class Active_Fire_Fetch():
         #         writer.writerow([fire['acq_date'], fire['acq_time'], fire['latitude'], fire['longitude']])
         # csvfile.close()
         # print('Fires successfully added to file')
+
+    def add_archive_fires(self, active_fire_list):
+        with open(self.fire_locations, 'r') as jsonFile:
+            oldJSON = json.load(jsonFile)
+            for fire in active_fire_list:
+                oldJSON["Date"].append(fire["Date"])
+                oldJSON["Time"].append(fire["Time"])
+                oldJSON["Latitude"].append(fire["Latitude"])
+                oldJSON["Longitude"].append(fire["Longitude"])
+        jsonFile.close()
+
+        with open(self.fire_locations, 'w') as jsonFile:
+            json.dump(oldJSON, jsonFile)
+        jsonFile.close()
+
+        print('Fires successfully added to file')
     
 
     def generate_random_coordinates(self):
@@ -170,6 +242,20 @@ class Active_Fire_Fetch():
         #         writer.writerow([coord[0], coord[1]])
         # csvfile.close()
         # print('Non fires successfully added to file')
+    
+
+    def convert_archive_data(self):
+        '''
+        Adds archived data object into a JSON object
+        '''
+        fire_lists = []
+        for file in self.archive_data:
+            fire_lists += self.extract_archive_fires(file)
+        
+        fire_lists.sort(key=lambda k: k["Datetime"])
+        
+        self.add_archive_fires(fire_lists)
+
 
     def main_function(self, day_num):
         ftp = self.access_data_file()

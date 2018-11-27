@@ -6,7 +6,10 @@ $.getScript( "https://unpkg.com/leaflet@1.3.4/dist/leaflet.js", function() {
     initializeMap();
 });
 
-// import L from 'leaflet';
+// import { addActiveFireMarkers } from './set-map-markers.js';
+import * as activeFireData from './fire_locations.js';
+import * as setMapMarkers from './set-map-markers.js';
+
 
 function initializeMap() {
     // L = leaflet;
@@ -22,13 +25,69 @@ function initializeMap() {
         id: 'mapbox.streets',
         accessToken: 'sk.eyJ1IjoiZ2tsaW5lIiwiYSI6ImNqbXByeWI3cTAwb2szcHFxOGYzd2Nma2sifQ.iOVtTFJBs_1AvF_6JPmVyw'
     }).addTo(map);
+
+    // TEST
+    setMapMarkers.default(map);
+    // setMapMarkers.addActiveFireMarkers(map);
+
+    // L.marker([39.122, -122.097]).addTo(map).bindPopup("<b>2018-10-22</b><br>Time: 19:10<br>Latitude: 39.122<br>Longitude: -122.097");
+    // L.marker([38.272, -120.31]).addTo(map).bindPopup("<b>2018-10-23</b><br>Time: 06:10<br>Latitude: 38.272<br>Longitude: -120.31");
+    // L.marker([36.665, -121.375]).addTo(map).bindPopup("<b>2018-10-23</b><br>Time: 21:30<br>Latitude: 36.665<br>Longitude: -121.375");
+    // L.marker([36.214, -118.641]).addTo(map).bindPopup("<b>2018-10-25</b><br>Time: 06:00<br>Latitude: 36.214<br>Longitude: -118.641");
+    // L.marker([39.698, -122.285]).addTo(map).bindPopup("<b>2018-10-25</b><br>Time: 21:15<br>Latitude: 39.698<br>Longitude: -122.285");
+    // L.marker([36.227, -118.628]).addTo(map).bindPopup("<b>2018-10-27</b><br>Time: 10:00<br>Latitude: 36.227<br>Longitude: -118.628");
+    
+
+    // Latitude
+    
+    //     "36.212",
+    //     "36.218",
+    //     "36.227"
+    // Longitude
+    
+    //     "-118.643",
+    //     "-118.636",
+    //     "-118.628"
+    // Time
+    
+    // "21:15",
+    // "05:45",
+    // "10:00"
+    // 
+    // Date
+    
+    //     "2018-10-25",
+    //     "2018-10-27",
+    //     "2018-10-27"
 }
 
-function addActiveFireMarkers() {
-    var fireDataCSV = 'fire_locations.csv';
-    var activeFireData = $.csv.toObjects(fireDataCSV, {separator: ' '}, (err, data) => {
-        console.log(activeFireData);
-    });
+function addActiveFireMarkers(map) {
+    const dates = activeFireData.default.Date,
+          times = activeFireData.default.Time,
+          lats = activeFireData.default.Latitude,
+          lons = activeFireData.default.Longitude;
+    const arraySize = dates.length;
+
+    let activeFires = {
+        dates: [],
+        times: [],
+        lats: [],
+        lons: []
+    }
+
+    for(let i = arraySize - 20; i < arraySize; i++) {
+        activeFires.dates.push(dates[i]);
+        activeFires.times.push(times[i]);
+        activeFires.lats.push(lats[i]);
+        activeFires.lons.push(lons[i]);
+        
+        let popupText = `<b>${dates[i]}</b><br>Time: ${times[i]}<br>Latitude: ${lats[i]}<br>Longitude: ${lons[i]}`;
+        L.marker([lats[i], lons[i]]).addTo(map).bindPopup(popupText);
+    }
+
+
+    console.log(activeFires);
+    console.log(arraySize);
 }
 
 

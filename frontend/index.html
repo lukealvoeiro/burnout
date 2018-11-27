@@ -1,0 +1,114 @@
+<!-- DOCTYPE -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Burnout</title>
+    <meta charset="utf-8">
+    <!-- Viewport Meta Tag -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" 
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" 
+        crossorigin="anonymous">
+    <!-- Other CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+        crossorigin=""/>
+    <!-- Own CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+        integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+        crossorigin="anonymous">
+    </script>
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+        integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+        crossorigin=""></script>
+    <!-- jQuery-CSV -->
+    <script src="jquery.csv.min.js"></script>
+    <!-- jQuery UI Implementation -->
+    <script type="module" src="jQuery-UI.js"></script>
+    <!-- <script src="leaflet.js" ></script> -->
+</head>
+
+<body>
+    <!--Nav Bar-->
+    <nav id="navbar" class="navbar navbar-expand-md navbar-dark bg-dark fixed-top" role="navigation">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-content"
+                    aria-controls="nav-content" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <p>
+                <label for="markerNumber"><font color="white">Number of Active Fires:</font></label>
+                <input id="markerNumber" />
+                <button id="reloadFires">Reload</button>
+            </p>
+    
+            <a class="navbar-brand"><font color="white">Burnout</font></a>
+        </div>
+    </nav>
+    
+    <div class="container fill">
+        <div id="mapid" style="width:100%;"></div>
+    </div>
+    <!-- <div id="mapid" style="width: 100%; height: 100%;"></div> -->
+    <!-- <div id="mapid"></div> -->
+    <!-- <script>
+        // $.getScript( "leaflet-maps.js", function() {
+        //     console.log('Successfully loaded leaflet-maps.js');
+        // });
+        import { initializeMap } from 'leaflet-maps';
+        initializeMap();
+
+        // var map = L.map('mapid', {
+        //     center: [37.641, -120.761], // Waterford, CA
+        //     zoom: 6
+        // });
+        // L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+        //     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        //     maxZoom: 18,
+        //     id: 'mapbox.streets',
+        //     accessToken: 'sk.eyJ1IjoiZ2tsaW5lIiwiYSI6ImNqbXByeWI3cTAwb2szcHFxOGYzd2Nma2sifQ.iOVtTFJBs_1AvF_6JPmVyw'
+        // }).addTo(map);
+        
+        // var fireDataCSV = 'fire_locations.csv';
+        // var activeFireData = $.csv.toObjects(fireDataCSV, {separator: ' '}, (err, data) => {
+        //     console.log(activeFireData);
+        // });
+        // $(document).ready(function() {
+        //     $.ajax({
+        //         type: "GET",
+        //         url: "../fire_locations.csv",
+        //         dataType: "data",
+        //         success: function(data) {processData(data);}
+        //     });
+        // });
+
+        // function processData(allText) {
+        //     var allTextLines = allText.split(/\r\n|\n/);
+        //     var headers = allTextLines[0].split(' ');
+        //     var lines = [];
+
+        //     for (var i=1; i<allTextLines.length; i++) {
+        //         var data = allTextLines[i].split(' ');
+        //         if (data.length == headers.length) {
+
+        //             var tarr = [];
+        //             for (var j=0; j<headers.length; j++) {
+        //                 tarr.push(headers[j]+":"+data[j]);
+        //             }
+        //             lines.push(tarr);
+        //         }
+        //     }
+        //     console.log(lines);
+        // }
+    </script> -->
+    <script type=module src="leaflet-maps.js"></script>
+
+<!-- Javascript -->
+
+</body>
+</html>
