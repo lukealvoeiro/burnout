@@ -35,25 +35,31 @@
 
 <body>
     <!--Nav Bar-->
-    <nav id="navbar" class="navbar navbar-expand-md navbar-dark bg-dark fixed-top" role="navigation">
+    <nav id="navbar" class="navbar navbar-expand-md navbar-dark bg-dark" role="navigation">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-content"
                     aria-controls="nav-content" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <p>
+            <!-- <p>
                 <label for="markerNumber"><font color="white">Number of Active Fires:</font></label>
                 <input id="markerNumber" />
                 <button id="reloadFires">Reload</button>
+            </p> -->
+
+            <p>
+                <label for="markerNumber"><font color="white">Active Fire Date Range:</font></label>
+                <input type="text" id="startdate">
+                <input type="text" id="enddate">
             </p>
     
             <a class="navbar-brand"><font color="white">Burnout</font></a>
         </div>
     </nav>
     
-    <div class="container fill">
-        <div id="mapid" style="width:100%;"></div>
-    </div>
+    <!-- <div class="container fill"id="mapid" style="width:100%;"></div> -->
+    <div id="mapid" style="width:100%;"></div>
+    
     <!-- <div id="mapid" style="width: 100%; height: 100%;"></div> -->
     <!-- <div id="mapid"></div> -->
     <!-- <script>

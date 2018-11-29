@@ -22,8 +22,11 @@ class Active_Fire_Fetch():
     local_download = 'new_data.csv'
     fire_locations = 'fire_locations.json'
     non_fire_locations = 'non_fire_locations.json'
-    archive_data = ['../fire_archive_data/fire_archive_M6_31049.csv', '../fire_archive_data/fire_nrt_M6_31049.csv']
-    # archive_data = ['../fire_archive_data/fire_archive_M6_32169.json', '../fire_archive_data/fire_archive_V1_32170.json', '../fire_archive_data/fire_nrt_M6_32169.json', '../fire_archive_data/fire_nrt_V1_32170.json']
+    # archive_data = ['../fire_archive_data/fire_archive_M6_31049.csv', '../fire_archive_data/fire_nrt_M6_31049.csv']
+    archive_data = ['../fire_archive_data/fire_archive_M6_32414.csv', 
+                    '../fire_archive_data/fire_archive_V1_32415.csv', 
+                    '../fire_archive_data/fire_nrt_M6_32414.csv', 
+                    '../fire_archive_data/fire_nrt_V1_32415.csv']
     ca_north_lat = 42
     ca_south_lat = 32.7
     ca_east_long = -116.3
@@ -90,7 +93,7 @@ class Active_Fire_Fetch():
                 date = row['acq_date']
                     # active_fires.append({'acq_date': row['acq_date'], 'acq_time': row['acq_time'], 'latitude': row['latitude'], 'longitude': row['longitude']})
                     # print(row['latitude'], row['longitude'])
-                non_fire_coords = self.find_non_fires(row, non_fire_coords)
+                non_fire_coords = self.cross_check_fires(row, non_fire_coords)
                 # for coord in non_fire_coords:
                 #     if abs(float(row['latitude']) - coord[0]) <= 0.1 & abs(float(row['longitude']) - coord[1]) <= 0.1:
                 #         non_fire_coords.remove(coord)
@@ -112,6 +115,7 @@ class Active_Fire_Fetch():
         datetime_format = '%Y-%m-%d'
         with open(csv_file, 'r') as csvfile:
             table = csv.DictReader(csvfile)
+            date = ''
 
             for row in table:
                 if self.active_fire_check(row['confidence'], row['latitude'], row['longitude']):
@@ -192,42 +196,71 @@ class Active_Fire_Fetch():
         and returns this list.
         '''
         non_fire_coords = []
-        for i in range(100):
+        for i in range(140):
             rand_lat = random.uniform(self.ca_south_lat, self.ca_north_lat)
             rand_long = random.uniform(self.ca_west_long, self.ca_east_long)
             non_fire_coords.append({'Latitude': rand_lat, 'Longitude': rand_long})
         return non_fire_coords
+
+    
+    def generate_non_fires(self):
+        '''
+        Returns a list of non-fire coordinate dictionaries for days a week apart.
+        '''
+        unconfirmed_non_fires = {} # key is date, val is other dict with coords
+        start_date = datetime.datetime.strptime("2014-01-01", "%Y-%m-%d")
+        while (start_date < datetime.datetime.today()):
+            date_str = start_date.strftime('%Y-%m-%d')
+            print("Generating non_fire on " + date_str)
+            random_coords = self.generate_random_coordinates()
+            unconfirmed_non_fires[date_str] = random_coords
+
+            start_date += datetime.timedelta(days = 7)
+        
+        return unconfirmed_non_fires
+
     
 
-    def find_non_fires(self, row, non_fire_coords):
+    def cross_check_fires(self, active_fire_coords, non_fire_coords):
         '''
         Checks if any of the randomly generated coordinates are within the immediate area
         of any active fires. If so, it removes them from the list and returns the resulting
         non-fire list.
+
+        Which active fire list should this take in??
         '''
-        for coord in non_fire_coords:
-            if (abs(float(row['latitude']) - float(coord['Latitude'])) <= 0.1) & (abs(float(row['longitude']) - float(coord['Longitude'])) <= 0.1):
-                non_fire_coords.remove(coord)
-            else:
-                coord['Latitude'] = str(coord['Latitude'])
-                coord['Longitude'] = str(coord['Longitude'])
+        checked_fire_coords = []
+        for fire in active_fire_coords:
+            if fire["Date"] in non_fire_coords:
+                for coord in non_fire_coords[fire["Date"]]:
+                    if (abs(float(fire["Latitude"]) - float(coord["Latitude"])) <= 0.1) & (abs(float(fire["Longitude"]) - float(coord["Longitude"])) <= 0.1):
+                        non_fire_coords[fire["Date"]].remove(coord)
+        
         return non_fire_coords
+
+        # for coord in non_fire_coords:
+        #     if (abs(float(row['latitude']) - float(coord['Latitude'])) <= 0.1) & (abs(float(row['longitude']) - float(coord['Longitude'])) <= 0.1):
+        #         non_fire_coords.remove(coord)
+        #     else:
+        #         coord['Latitude'] = str(coord['Latitude'])
+        #         coord['Longitude'] = str(coord['Longitude'])
+        # return non_fire_coords
     
 
-    def add_non_fires(self, non_fire_coords, date):
+    def add_non_fires(self, non_fire_coords):
         '''
         Adds confirmed non-fire coordinates to a JSON file.
         '''
         oldJSON = {}
         with open(self.non_fire_locations, 'r') as jsonFile:
             oldJSON = json.load(jsonFile)
-            if (oldJSON == None) | (oldJSON == {}):
-                oldJSON = {"Date": [], "Latitude": [], "Longitude": []}
-            
-            for coord in non_fire_coords:
-                oldJSON["Date"].append(date)
-                oldJSON["Latitude"].append(coord["Latitude"])
-                oldJSON["Longitude"].append(coord["Longitude"])
+                
+            for date in non_fire_coords:
+                for coord in non_fire_coords[date]:
+                    oldJSON["Date"].append(date)
+                    oldJSON["Latitude"].append(coord["Latitude"])
+                    oldJSON["Longitude"].append(coord["Longitude"])
+
         jsonFile.close()
 
         with open(self.non_fire_locations, 'w') as jsonFile:
@@ -235,13 +268,6 @@ class Active_Fire_Fetch():
         jsonFile.close()
 
         print('Non-fires successfully added to file')
-
-        # with open(self.non_fire_locations, 'a') as csvfile:
-        #     writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        #     for coord in non_fire_coords:
-        #         writer.writerow([coord[0], coord[1]])
-        # csvfile.close()
-        # print('Non fires successfully added to file')
     
 
     def convert_archive_data(self):
@@ -256,6 +282,11 @@ class Active_Fire_Fetch():
         
         self.add_archive_fires(fire_lists)
 
+        unconfirmed_non_fires = self.generate_non_fires()
+        confirmed_non_fires = self.cross_check_fires(fire_lists, unconfirmed_non_fires)
+        self.add_non_fires(confirmed_non_fires)
+
+
 
     def main_function(self, day_num):
         ftp = self.access_data_file()
@@ -266,7 +297,7 @@ class Active_Fire_Fetch():
         self.download_file(ftp, filename)
         fire_lists = self.extract_active_fires()
         self.add_active_fires(fire_lists['active_fires'])
-        self.add_non_fires(fire_lists['non_fire_coords'], fire_lists['date'])
+        # self.add_non_fires(fire_lists['non_fire_coords'], fire_lists['date'])
 
 if __name__ == "__main__":
     new_fetch = Active_Fire_Fetch()

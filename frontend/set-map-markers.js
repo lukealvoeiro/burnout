@@ -29,7 +29,7 @@ export default function addActiveFireMarkers(map, numOfMarkers) {
 
     const flameIcon = L.icon({
         iconUrl: './img/flame_icon.ico',
-        iconSize: [50, 30],
+        iconSize: [40, 40],
         iconAnchor: [0, 0],
         popupAnchor: [20, -5],
     });
