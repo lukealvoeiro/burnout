@@ -1,5 +1,274 @@
-export default
-{
+<!-- DOCTYPE -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Burnout</title>
+    <meta charset="utf-8">
+    <!-- Viewport Meta Tag -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" 
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" 
+        crossorigin="anonymous">
+    <!-- Other CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+        crossorigin=""/>
+    <!-- <link rel="stylesheet" href="css/pickmeup.css"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.min.css" 
+        integrity="sha256-JDBcnYeV19J14isGd3EtnsCQK05d8PczJ5+fvEvBJvI=" 
+        crossorigin="anonymous" />
+    <!-- Own CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+        integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+        crossorigin="anonymous"></script>
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+        integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+        crossorigin=""></script>
+    <!-- jQuery-CSV -->
+    <script src="jquery.csv.min.js"></script>
+    <!-- Bootstrap Datepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.min.js" 
+        integrity="sha256-tW5LzEC7QjhG0CiAvxlseMTs2qJS7u3DRPauDjFJ3zo=" 
+        crossorigin="anonymous"></script>
+    <!-- jQuery UI Implementation -->
+    <script type="module" src="jQuery-UI.js"></script>
+    <!-- Leaflet Rastercoords -->
+    <script src="heatmap/rastercoords.js"></script>
+    <!-- <script src="leaflet.js" ></script> -->
+</head>
+
+<body>
+    <!--Nav Bar-->
+    <nav id="navbar" class="navbar navbar-expand-md navbar-dark bg-dark" role="navigation">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-content"
+                    aria-controls="nav-content" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <p>
+                <button id="toggleMarkers">Toggle Markers</button>
+                <button id="toggleHeatmap">Toggle Heatmap</button>
+            </p>
+
+            <!-- jQuery Datepicker -->
+            <p class="ui-datepicker">
+                <label for="markerNumber"><font color="white">Active Fire Date Range:</font></label>
+                <input type="text" id="startdate">
+                <label for="markerNumber"><font color="white"> to </font></label>
+                <input type="text" id="enddate">
+                <button id="reloadFires">Reload</button>
+            </p>
+            <a class="navbar-brand"><font color="white">Burnout</font></a>
+        </div>
+    </nav>
+    
+    <div id="mapid" style="width:100%;"></div>
+    <script type=module src="leaflet-maps.js"></script>
+    <script>
+        // JavaScript that works with the leaflet library
+// to display an interactive map
+
+$.getScript( "https://unpkg.com/leaflet@1.3.4/dist/leaflet.js", function() {
+    console.log('Successfully loaded leaflet.js');
+    initializeMap();
+});
+
+
+function initializeMap() {
+    let globalMapVar,
+        globalMapMarkers = [],
+        globalHeatmapToggled = false,
+        globalHeatmapLayer,
+        globalMarkersToggled,
+        globalNumOfMarkers,
+        globalStartDate,
+        globalEndDate;
+    let activeFireData;
+    let caNorthLat = 42,
+        caSouthLat = 32.7,
+        caEastLon = -116.3,
+        caWestLon = -123.7
+    let corner1 = L.latLng(caNorthLat, caEastLon),
+        corner2 = L.latLng(caSouthLat, caWestLon);
+    
+    var map = L.map('mapid', {
+        center: [37.641, -120.761], // Waterford, CA; roughly the middle of the state
+        zoom: 6
+    });
+
+    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox.streets',
+        accessToken: 'sk.eyJ1IjoiZ2tsaW5lIiwiYSI6ImNqbXByeWI3cTAwb2szcHFxOGYzd2Nma2sifQ.iOVtTFJBs_1AvF_6JPmVyw'
+    }).addTo(map);
+
+    setGlobalMapVar(map);
+    setActiveFireData();
+    addActiveFireMarkers('2018-10-01', '2018-12-01');
+
+    $.getScript( "https://unpkg.com/leaflet@1.3.4/dist/leaflet.js", function() {
+        console.log('Successfully loaded leaflet.js');
+    });
+    
+    function setGlobalMapVar(map) {
+        globalMapVar = map;
+    }
+    
+    function addActiveFireMarkers(startDate, endDate) {
+        const dates = activeFireData.Date,
+              times = activeFireData.Time,
+              lats = activeFireData.Latitude,
+              lons = activeFireData.Longitude;
+        const arraySize = dates.length;
+    
+        const flameIcon = L.icon({
+            iconUrl: './img/flame_icon.ico',
+            iconSize: [40, 40],
+            iconAnchor: [0, 0],
+            popupAnchor: [20, -5],
+        });
+    
+        // Find the first index of the starting date
+        let startDateIndex = dates.indexOf(startDate),
+            currentDate = startDate;
+        let startMonth = startDate.substr(5, 2),
+            startDay = startDate.substr(8),
+            startYear = startDate.substr(0, 4),
+            endMonth = endDate.substr(5, 2),
+            endDay = endDate.substr(8),
+            endYear = endDate.substr(0, 4),
+            nextDay = parseInt(startDay) + 1,
+            nextMonth = parseInt(startMonth),
+            nextYear = parseInt(startYear);
+    
+        while (startDateIndex === -1) {
+            if (nextDay > 31) { // max num of days in a month // CHECK FOR LEN OF DAYS/MONTHS
+                nextDay = 1;
+                nextMonth++;
+                if (nextMonth > 12) { // max num of months in a year
+                    nextMonth = 1;
+                    nextYear++;
+                }
+            }
+            let dayStr = (nextDay.toString().length < 2) ? `0${nextDay.toString()}` : nextDay.toString(),
+                monthStr = (nextMonth.toString().length < 2) ? `0${nextMonth.toString()}` : nextMonth.toString(),
+                yearStr = nextYear.toString(),
+                nextDate = `${yearStr}-${monthStr}-${dayStr}`;
+            
+            startDateIndex = dates.indexOf(nextDate);
+            currentDate = nextDate;
+    
+            nextDay++;
+            console.log(`nextDate: ${nextDate}`);
+        }
+        let i = startDateIndex,
+            endDatetime = new Date(endDate),
+            currentDatetime = new Date(currentDate);
+        
+        while (currentDatetime <= endDatetime) {
+            let popUpText = `<b>${dates[i]}</b><br>Time: ${times[i]}<br>Latitude: ${lats[i]}<br>Longitude: ${lons[i]}`;
+            globalMapMarkers.push(L.marker([lats[i], lons[i]], {icon: flameIcon}).addTo(map).bindPopup(popUpText));
+            i++;
+            currentDatetime = new Date(dates[i]); // doing this after so it gets next date
+            console.log(`currentDateTime: ${currentDatetime}`);
+        }
+        globalStartDate = startDate;
+        globalEndDate = endDate;
+        globalMarkersToggled = true;
+    }
+    
+    function reloadMarkers(startDate, endDate) {
+        for (let i = 0; i < globalMapMarkers.length; i++) {
+            globalMapMarkers[i].remove();
+        }
+        addActiveFireMarkers(startDate, endDate);
+    }
+    
+    function toggleMarkers() {
+        if (globalMarkersToggled) {
+            globalMarkersToggled = false;
+            for (let i = 0; i < globalMapMarkers.length; i++) {
+                globalMapMarkers[i].remove();
+            }
+            console.log('Markers Removed.');
+        } else {
+            globalMarkersToggled = true;
+            addActiveFireMarkers(globalStartDate, globalEndDate);
+            console.log('Markers Added.');
+        }
+    }
+    
+    function toggleHeatmap() {
+        if (globalHeatmapToggled) {
+            globalHeatmapToggled = false;
+            globalHeatmapLayer.remove();
+        } else {
+            globalHeatmapToggled = true;
+            globalHeatmapLayer = L.tileLayer('/heatmap/tiles/{z}/{x}/{y}.png', {
+                noWrap: true,
+                tms: true,
+                opacity: 0.5,
+            }).addTo(map)
+        }
+    }
+    
+
+$(document).ready(function() {
+    let startDatePicker = $("#startdate").datepicker({
+        dateFormat: "mm/dd/yyyy", changeMonth: true, changeYear: true, minDate: new Date(2014, 1 - 1, 1), maxDate: 0
+    });
+    let endDatePicker = $("#enddate").datepicker({
+        dateFormat: "mm/dd/yyyy", minDate: new Date(2014, 1 - 1, 1), maxDate: 0
+    });
+
+    $("#reloadFires").on("click", function() {
+        let startDate = $('#startdate').val();
+        let endDate = $('#enddate').val();
+
+        let startMonth = startDate.substr(0, 2),
+            startDay = startDate.substr(3, 2),
+            startYear = startDate.substr(6),
+            endMonth = endDate.substr(0, 2),
+            endDay = endDate.substr(3, 2),
+            endYear = endDate.substr(6);
+        
+        let startYMD = `${startYear}-${startMonth}-${startDay}`,
+            endYMD = `${endYear}-${endMonth}-${endDay}`;
+        
+        let today = new Date(),
+            endDatetime = new Date(endYMD);
+        console.log(`End Date: ${startYear}; endDatetime: ${endYear}-${endMonth}-${endDay}`);
+        console.log(`StartYear: ${startYMD.substr(0, 4)} StartMonth: ${startYMD.substr(5, 2)} StartDay: ${startYMD.substr(8)}`)
+
+        if(parseInt(startYear) < 2014) {
+            alert('Please enter a start date on or after 01/01/2014!');
+        } else if (endDatetime > today) {
+            alert(`Please enter an end date before today's date!`);
+        } else {
+            reloadMarkers(startYMD, endYMD);
+        }
+    });
+
+    $("#toggleHeatmap").on("click", function() {
+        toggleHeatmap();
+    });
+
+    $("#toggleMarkers").on("click", function() {
+        toggleMarkers();
+    });
+
+    $("button").button();
+});
+
+function setActiveFireData() {
+    activeFireData = {
     "Date": [
         "2016-02-10",
         "2016-02-10",
@@ -56425,3 +56694,15 @@ export default
         "-121.414"
     ]
 }
+}
+
+
+
+}
+    </script>
+
+
+<!-- Javascript -->
+
+</body>
+</html>

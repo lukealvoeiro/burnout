@@ -8,18 +8,6 @@ class Fetch_all_fires():
 
     # Class Attributes
     fire_locations = 'fire_locations.json'
-    jan = 1
-    feb = 32
-    mar = 60
-    apr = 91
-    may = 121
-    june = 152
-    july = 182
-    aug = 213
-    sept = 244
-    oct = 274
-    nov = 305
-    dec = 335
 
     def update_fire_locations(self):
         oldJSON = {}
@@ -29,7 +17,7 @@ class Fetch_all_fires():
             print('last_date: '+last_date)
 
 
-        return 'penis'
+        return 'test'
     
 
     def get_day_num_from_date(self, date):
@@ -41,14 +29,6 @@ class Fetch_all_fires():
 
 
 if __name__ == "__main__":
-    # for i in range(61):
-    #     new_fetch = ff.Active_Fire_Fetch()
-    #     new_fetch.main_function(256 + i)
-    #     print("Fetched day " + str(256 + i))
-
-    # new = Fetch_all_fires()
-    # new.get_day_num_from_date('aldkfjals;fjal;kdfkjas')
-
     new_fetch = ff.Active_Fire_Fetch()
     new_fetch.convert_archive_data()
 

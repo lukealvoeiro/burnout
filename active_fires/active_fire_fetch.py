@@ -16,17 +16,13 @@ class Active_Fire_Fetch():
     modis_dir = '/FIRMS/c6/USA_contiguous_and_Hawaii/'
     modis_7d = 'MODIS_C6_USA_contiguous_and_Hawaii_7d.csv'
     modis_24hr = 'MODIS_C6_USA_contiguous_and_Hawaii_24hr.csv'
-    # modis_file = 'MODIS_C6_USA_contiguous_and_Hawaii_MCD14DL_NRT_2018238.txt'
     modis_file = 'MODIS_C6_USA_contiguous_and_Hawaii_MCD14DL_NRT_2018'
     modis_file_end = 256
     local_download = 'new_data.csv'
     fire_locations = 'fire_locations.json'
     non_fire_locations = 'non_fire_locations.json'
-    # archive_data = ['../fire_archive_data/fire_archive_M6_31049.csv', '../fire_archive_data/fire_nrt_M6_31049.csv']
-    archive_data = ['../fire_archive_data/fire_archive_M6_32414.csv', 
-                    '../fire_archive_data/fire_archive_V1_32415.csv', 
-                    '../fire_archive_data/fire_nrt_M6_32414.csv', 
-                    '../fire_archive_data/fire_nrt_V1_32415.csv']
+    archive_data = ['../fire_archive_data/fire_archive_M6_33217.csv', 
+                    '../fire_archive_data/fire_nrt_M6_33217.csv']
     ca_north_lat = 42
     ca_south_lat = 32.7
     ca_east_long = -116.3
@@ -77,29 +73,21 @@ class Active_Fire_Fetch():
         tuple containing the active fire object along with the non-fire object.
         '''
         active_fires = {"Date": [], "Time": [], "Latitude": [], "Longitude": []}
-        # active_fires = []
         with open(self.local_download, 'r') as csvfile:
             table = csv.DictReader(csvfile)
             non_fire_coords = self.generate_random_coordinates()
             date = ''
 
             for row in table:
-                # if row['confidence'] == '100':
                 if self.active_fire_check(row['confidence'], row['latitude'], row['longitude']):
                     active_fires["Date"].append(row['acq_date'])
                     active_fires["Time"].append(row['acq_time'])
                     active_fires["Latitude"].append(row['latitude'])
                     active_fires["Longitude"].append(row['longitude'])
                 date = row['acq_date']
-                    # active_fires.append({'acq_date': row['acq_date'], 'acq_time': row['acq_time'], 'latitude': row['latitude'], 'longitude': row['longitude']})
-                    # print(row['latitude'], row['longitude'])
                 non_fire_coords = self.cross_check_fires(row, non_fire_coords)
-                # for coord in non_fire_coords:
-                #     if abs(float(row['latitude']) - coord[0]) <= 0.1 & abs(float(row['longitude']) - coord[1]) <= 0.1:
-                #         non_fire_coords.remove(coord)
         csvfile.close()
         return {'active_fires': active_fires, 'non_fire_coords': non_fire_coords, 'date': date}
-        # return (active_fires, non_fire_coords, date)
     
 
     def extract_archive_fires(self, csv_file):
@@ -126,22 +114,6 @@ class Active_Fire_Fetch():
         csvfile.close()
         return active_fires
 
-        # active_fires = {"Date": [], "Time": [], "Latitude": [], "Longitude": []}
-        # with open(csv_file, 'r') as csvfile:
-        #     table = csv.DictReader(csvfile)
-        #     date = ''
-
-        #     for row in table:
-        #         if self.active_fire_check(row['confidence'], row['latitude'], row['longitude']):
-        #             active_fires["Date"].append(row['acq_date'])
-        #             active_fires["Time"].append(row['acq_time'])
-        #             active_fires["Latitude"].append(row['latitude'])
-        #             active_fires["Longitude"].append(row['longitude'])
-        #             print("Extracted Fire on " + row['acq_date'])
-        #         date = row['acq_date']
-        # csvfile.close()
-        # return active_fires
-
 
     def add_active_fires(self, active_fire_list):
         '''
@@ -166,14 +138,11 @@ class Active_Fire_Fetch():
 
         print('Fires successfully added to file')
 
-        # with open(self.fire_locations, 'a') as csvfile:
-        #     writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        #     for fire in active_fire_list:
-        #         writer.writerow([fire['acq_date'], fire['acq_time'], fire['latitude'], fire['longitude']])
-        # csvfile.close()
-        # print('Fires successfully added to file')
 
     def add_archive_fires(self, active_fire_list):
+        '''
+        Adds active fires from archive data to the destination JSON file
+        '''
         with open(self.fire_locations, 'r') as jsonFile:
             oldJSON = json.load(jsonFile)
             for fire in active_fire_list:
@@ -237,14 +206,6 @@ class Active_Fire_Fetch():
                         non_fire_coords[fire["Date"]].remove(coord)
         
         return non_fire_coords
-
-        # for coord in non_fire_coords:
-        #     if (abs(float(row['latitude']) - float(coord['Latitude'])) <= 0.1) & (abs(float(row['longitude']) - float(coord['Longitude'])) <= 0.1):
-        #         non_fire_coords.remove(coord)
-        #     else:
-        #         coord['Latitude'] = str(coord['Latitude'])
-        #         coord['Longitude'] = str(coord['Longitude'])
-        # return non_fire_coords
     
 
     def add_non_fires(self, non_fire_coords):
@@ -282,17 +243,11 @@ class Active_Fire_Fetch():
         
         self.add_archive_fires(fire_lists)
 
-        unconfirmed_non_fires = self.generate_non_fires()
-        confirmed_non_fires = self.cross_check_fires(fire_lists, unconfirmed_non_fires)
-        self.add_non_fires(confirmed_non_fires)
-
-
 
     def main_function(self, day_num):
         ftp = self.access_data_file()
         # for i in range(60):
         filename = self.modis_file + str(day_num) + '.txt'
-        # filename = self.modis_file + str(self.modis_file_end) + '.txt'
         self.modis_file_end += 1
         self.download_file(ftp, filename)
         fire_lists = self.extract_active_fires()
@@ -302,60 +257,3 @@ class Active_Fire_Fetch():
 if __name__ == "__main__":
     new_fetch = Active_Fire_Fetch()
     new_fetch.main_function(243)
-
-
-#domain name or server ip:
-# nasa_server = 'nrt3.modaps.eosdis.nasa.gov'
-# username = 'lukealvoeiro'
-# pword = 'Burnout1'
-# modis_dir = '/FIRMS/c6/USA_contiguous_and_Hawaii/'
-# modis_7d = 'MODIS_C6_USA_contiguous_and_Hawaii_7d.csv'
-# modis_24hr = 'MODIS_C6_USA_contiguous_and_Hawaii_24hr.csv'
-# modis_file = 'MODIS_C6_USA_contiguous_and_Hawaii_MCD14DL_NRT_2018281.txt'
-# local_download = 'new_data.csv'
-# fire_locations = 'fire_locations.csv'
-
-# def access_data_file():
-#     ftp = FTP(nasa_server)
-#     ftp.login(username, pword)
-#     ftp.cwd(modis_dir)
-#     return ftp
-
-
-# def download_file(ftp, filename):
-
-#     localfile = open(local_download, 'wb')
-#     ftp.retrbinary('RETR ' + filename, localfile.write, 1024)
-
-#     ftp.quit()
-#     localfile.close()
-
-
-# def extract_active_fires():
-#     active_fires = []
-#     with open(local_download, 'r') as csvfile:
-#         table = csv.DictReader(csvfile)
-#         for row in table:
-#             if row['confidence'] == '100':
-#                 active_fires.append({'acq_date': row['acq_date'], 'acq_time': row['acq_time'], 'latitude': row['latitude'], 'longitude': row['longitude']})
-#                 # print(row['latitude'], row['longitude'])
-#     csvfile.close()
-#     return active_fires
-
-
-# def add_active_fires(active_fire_list):
-#     with open(fire_locations, 'a') as csvfile:
-#         writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-#         for fire in active_fire_list:
-#             writer.writerow([fire['acq_date'], fire['acq_time'], fire['latitude'], fire['longitude']])
-#     csvfile.close()
-#     print('Fires successfully added to file')
-
-
-# def main_function():
-#     ftp = access_data_file()
-#     download_file(ftp, 'MODIS_C6_USA_contiguous_and_Hawaii_MCD14DL_NRT_2018281.txt')
-#     active_fires = extract_active_fires()
-#     add_active_fires(active_fires)
-
-# main_function()

@@ -1,4 +1,201 @@
-export default
+// JavaScript that works with the leaflet library
+// to display an interactive map
+
+$.getScript( "https://unpkg.com/leaflet@1.3.4/dist/leaflet.js", function() {
+    console.log('Successfully loaded leaflet.js');
+    initializeMap();
+});
+
+
+function initializeMap() {
+    var map = L.map('mapid', {
+        center: [37.641, -120.761], // Waterford, CA; roughly the middle of the state
+        zoom: 6
+    });
+
+    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox.streets',
+        accessToken: 'sk.eyJ1IjoiZ2tsaW5lIiwiYSI6ImNqbXByeWI3cTAwb2szcHFxOGYzd2Nma2sifQ.iOVtTFJBs_1AvF_6JPmVyw'
+    }).addTo(map);
+
+    setMapMarkers.setGlobalMapVar(map);
+    setMapMarkers.default('2018-10-01', '2018-12-01');
+
+    import * as activeFireData from './fire_locations.js';
+
+    $.getScript( "https://unpkg.com/leaflet@1.3.4/dist/leaflet.js", function() {
+        console.log('Successfully loaded leaflet.js');
+    });
+    
+    let globalMapVar,
+        globalMapMarkers = [],
+        globalHeatmapToggled = false,
+        globalHeatmapLayer,
+        globalMarkersToggled,
+        globalNumOfMarkers,
+        globalStartDate,
+        globalEndDate;
+    let caNorthLat = 42,
+        caSouthLat = 32.7,
+        caEastLon = -116.3,
+        caWestLon = -123.7
+    let corner1 = L.latLng(caNorthLat, caEastLon),
+        corner2 = L.latLng(caSouthLat, caWestLon);
+    
+    
+    export function setGlobalMapVar(map) {
+        globalMapVar = map;
+    }
+    
+    export default function addActiveFireMarkers(startDate, endDate) {
+        const dates = activeFireData.default.Date,
+              times = activeFireData.default.Time,
+              lats = activeFireData.default.Latitude,
+              lons = activeFireData.default.Longitude;
+        const arraySize = dates.length;
+    
+        const flameIcon = L.icon({
+            iconUrl: './img/flame_icon.ico',
+            iconSize: [40, 40],
+            iconAnchor: [0, 0],
+            popupAnchor: [20, -5],
+        });
+    
+        // Find the first index of the starting date
+        let startDateIndex = dates.indexOf(startDate),
+            currentDate = startDate;
+        let startMonth = startDate.substr(5, 2),
+            startDay = startDate.substr(8),
+            startYear = startDate.substr(0, 4),
+            endMonth = endDate.substr(5, 2),
+            endDay = endDate.substr(8),
+            endYear = endDate.substr(0, 4),
+            nextDay = parseInt(startDay) + 1,
+            nextMonth = parseInt(startMonth),
+            nextYear = parseInt(startYear);
+    
+        while (startDateIndex === -1) {
+            if (nextDay > 31) { // max num of days in a month // CHECK FOR LEN OF DAYS/MONTHS
+                nextDay = 1;
+                nextMonth++;
+                if (nextMonth > 12) { // max num of months in a year
+                    nextMonth = 1;
+                    nextYear++;
+                }
+            }
+            let dayStr = (nextDay.toString().length < 2) ? `0${nextDay.toString()}` : nextDay.toString(),
+                monthStr = (nextMonth.toString().length < 2) ? `0${nextMonth.toString()}` : nextMonth.toString(),
+                yearStr = nextYear.toString(),
+                nextDate = `${yearStr}-${monthStr}-${dayStr}`;
+            
+            startDateIndex = dates.indexOf(nextDate);
+            currentDate = nextDate;
+    
+            nextDay++;
+            console.log(`nextDate: ${nextDate}`);
+        }
+        let i = startDateIndex,
+            endDatetime = new Date(endDate),
+            currentDatetime = new Date(currentDate);
+        
+        while (currentDatetime <= endDatetime) {
+            let popUpText = `<b>${dates[i]}</b><br>Time: ${times[i]}<br>Latitude: ${lats[i]}<br>Longitude: ${lons[i]}`;
+            globalMapMarkers.push(L.marker([lats[i], lons[i]], {icon: flameIcon}).addTo(globalMapVar).bindPopup(popUpText));
+            i++;
+            currentDatetime = new Date(dates[i]); // doing this after so it gets next date
+            console.log(`currentDateTime: ${currentDatetime}`);
+        }
+        globalStartDate = startDate;
+        globalEndDate = endDate;
+        globalMarkersToggled = true;
+    }
+    
+    function reloadMarkers(startDate, endDate) {
+        for (let i = 0; i < globalMapMarkers.length; i++) {
+            globalMapMarkers[i].remove();
+        }
+        addActiveFireMarkers(startDate, endDate);
+    }
+    
+    function toggleMarkers() {
+        if (globalMarkersToggled) {
+            globalMarkersToggled = false;
+            for (let i = 0; i < globalMapMarkers.length; i++) {
+                globalMapMarkers[i].remove();
+            }
+            console.log('Markers Removed.');
+        } else {
+            globalMarkersToggled = true;
+            addActiveFireMarkers(globalMapVar, globalNumOfMarkers);
+            console.log('Markers Added.');
+        }
+    }
+    
+    function toggleHeatmap() {
+        if (globalHeatmapToggled) {
+            globalHeatmapToggled = false;
+            globalHeatmapLayer.remove();
+        } else {
+            globalHeatmapToggled = true;
+            globalHeatmapLayer = L.tileLayer('/heatmap/tiles/{z}/{x}/{y}.png', {
+                noWrap: true,
+                tms: true,
+                opacity: 0.5,
+            }).addTo(globalMapVar)
+        }
+    }
+    
+
+$(document).ready(function() {
+    let startDatePicker = $("#startdate").datepicker({
+        dateFormat: "mm/dd/yyyy", changeMonth: true, changeYear: true, minDate: new Date(2014, 1 - 1, 1), maxDate: 0
+    });
+    let endDatePicker = $("#enddate").datepicker({
+        dateFormat: "mm/dd/yyyy", minDate: new Date(2014, 1 - 1, 1), maxDate: 0
+    });
+
+    $("#reloadFires").on("click", function() {
+        let startDate = $('#startdate').val();
+        let endDate = $('#enddate').val();
+
+        let startMonth = startDate.substr(0, 2),
+            startDay = startDate.substr(3, 2),
+            startYear = startDate.substr(6),
+            endMonth = endDate.substr(0, 2),
+            endDay = endDate.substr(3, 2),
+            endYear = endDate.substr(6);
+        
+        let startYMD = `${startYear}-${startMonth}-${startDay}`,
+            endYMD = `${endYear}-${endMonth}-${endDay}`;
+        
+        let today = new Date(),
+            endDatetime = new Date(endYMD);
+        console.log(`End Date: ${startYear}; endDatetime: ${endYear}-${endMonth}-${endDay}`);
+        console.log(`StartYear: ${startYMD.substr(0, 4)} StartMonth: ${startYMD.substr(5, 2)} StartDay: ${startYMD.substr(8)}`)
+
+        if(parseInt(startYear) < 2014) {
+            alert('Please enter a start date on or after 01/01/2014!');
+        } else if (endDatetime > today) {
+            alert(`Please enter an end date before today's date!`);
+        } else {
+            reloadMarkers(startYMD, endYMD);
+        }
+    });
+
+    $("#toggleHeatmap").on("click", function() {
+        toggleHeatmap();
+    });
+
+    $("#toggleMarkers").on("click", function() {
+        toggleMarkers();
+    });
+
+    $("button").button();
+});
+
+let activeFireData = 
 {
     "Date": [
         "2016-02-10",
@@ -56424,4 +56621,8 @@ export default
         "-121.426",
         "-121.414"
     ]
+}
+
+
+
 }

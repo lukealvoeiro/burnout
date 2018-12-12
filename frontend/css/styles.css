@@ -18,3 +18,7 @@ html, body {
 .white-text {
     color: white;
 }
+
+.ui-datepicker {
+    z-index: 99999 !important;
+}
